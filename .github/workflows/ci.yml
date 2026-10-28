@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  go-backend:
+    name: Go backend tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.mod
+      - name: Format check
+        shell: bash
+        run: |
+          cd backend
+          test -z "$(gofmt -l ./cmd ./internal)"
+      - name: Unit and adapter tests
+        working-directory: backend
+        run: go test ./...
+      - name: Static analysis
+        working-directory: backend
+        run: go vet ./...
+      - name: Race detector (Linux and macOS)
+        if: runner.os != 'Windows'
+        working-directory: backend
+        run: go test -race ./...
+      - name: Build backend
+        working-directory: backend
+        run: go build ./cmd/manager
+
+  flutter-desktop:
+    name: Flutter tests and analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+      - name: Generate Linux host project
+        working-directory: apps/desktop
+        run: flutter create --platforms=linux .
+      - name: Resolve packages
+        working-directory: apps/desktop
+        run: flutter pub get
+      - name: Analyze Dart source
+        working-directory: apps/desktop
+        run: flutter analyze
+      - name: Flutter unit and widget tests
+        working-directory: apps/desktop
+        run: flutter test
+      - name: macOS entitlement configuration script tests
+        run: python3 -m unittest discover -s scripts/tests -v

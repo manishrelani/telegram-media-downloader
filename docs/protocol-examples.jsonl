@@ -1,0 +1,4 @@
+{"version":1,"id":"health-1","action":"health"}
+{"version":1,"id":"chats-1","action":"list_chats"}
+{"version":1,"id":"export-1","action":"export_chat","params":{"chat":"@example_channel","outputPath":"/tmp/example-export.json"}}
+{"version":1,"id":"download-1","action":"download_export","params":{"exportPath":"/tmp/example-export.json","directory":"/tmp/TelegramDownloads","include":["mp4","mkv","pdf","docx","pptx","xlsx"],"takeout":true,"continue":true,"group":true,"skipSame":true}}

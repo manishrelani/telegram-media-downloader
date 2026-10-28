@@ -1,0 +1,34 @@
+/build/
+*.log
+.DS_Store
+# Flutter / Dart generated files
+apps/desktop/.dart_tool/
+apps/desktop/.flutter-plugins
+apps/desktop/.flutter-plugins-dependencies
+apps/desktop/.packages
+apps/desktop/build/
+apps/desktop/macos/Flutter/Generated.xcconfig
+apps/desktop/macos/Flutter/ephemeral/
+apps/desktop/windows/flutter/ephemeral/
+apps/desktop/linux/flutter/ephemeral/
+# Local agent tooling and implementation scratch
+.agents/
+.superpowers/
+# Python caches and local runtime data
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+*.session
+*.session-*
+*.p12
+*.pfx
+*.key
+*.pem
+.tdl/
+/local-state/
+/downloads/
+/.smoke-*/
+**/.tdl-work/
+**/.telegram-media-manager-manifest.json

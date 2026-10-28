@@ -1,0 +1,61 @@
+name: Security
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 6 * * 1'
+permissions:
+  contents: read
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: 1.27.3
+          cache-dependency-path: |
+            backend/go.mod
+            thumbnail-helper/go.sum
+            runtime/tdl/go.sum
+      - name: Install pinned scanners
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          go install github.com/zricethezav/gitleaks/v8@v8.30.1
+      - name: Security automation regression tests
+        run: python3 -m unittest discover -s scripts/tests -v
+      - name: Publication, secrets and dependency checks
+        run: make security
+      - name: Handshake allocation regression and helper checks
+        working-directory: thumbnail-helper
+        run: go test -race ./... && go vet ./...
+      - name: Patched runtime regression and checks
+        working-directory: runtime/tdl
+        run: go test -race ./... && go vet ./...
+
+  macos-binaries:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: 1.27.3
+          cache-dependency-path: |
+            backend/go.mod
+            thumbnail-helper/go.sum
+            runtime/tdl/go.sum
+      - name: Build patched macOS executables
+        run: make build build-thumbnail-helper build-runtime
+      - name: Install pinned binary scanner
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+      - name: Check actual linked symbols and standard library
+        run: |
+          govulncheck -mode binary build/telegram-media-downloader-backend
+          govulncheck -mode binary build/tdl-tmm-previews-v3
+          govulncheck -mode binary build/tdl-tmm
