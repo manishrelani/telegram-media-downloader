@@ -16,6 +16,7 @@ class BuildMacOSAppTests(unittest.TestCase):
             script=root/'scripts/build_macos_app.sh'
             shutil.copyfile(ROOT/'scripts/build_macos_app.sh',script)
             (root/'apps/desktop/macos').mkdir(parents=True)
+            (root/'apps/desktop/pubspec.yaml').write_text('version: 0.1.0-alpha.1+1\n')
             (root/'backend').mkdir()
             (root/'runtime/tdl').mkdir(parents=True)
             (root/'runtime/tdl/go.mod').write_text('fixture')
@@ -33,9 +34,13 @@ class BuildMacOSAppTests(unittest.TestCase):
                 'go':'''#!/usr/bin/env python3
 import os,pathlib,sys
 output=pathlib.Path(sys.argv[sys.argv.index('-o')+1]);output.write_text('binary');output.chmod(0o755)
+with (output.parent/'deployment-targets.log').open('a') as log:
+    log.write(os.environ.get('MACOSX_DEPLOYMENT_TARGET','unset')+'\\n')
 ''',
                 'flutter':'''#!/usr/bin/env python3
-import pathlib
+import pathlib,sys
+with pathlib.Path('flutter-commands.log').open('a') as log:
+    log.write(' '.join(sys.argv[1:])+'\\n')
 folder=pathlib.Path('build/macos/Build/Products/Release/Telegram Media Downloader.app/Contents/MacOS');folder.mkdir(parents=True,exist_ok=True)
 (folder/'tdl-tmm-previews-v2').write_text('obsolete vulnerable helper')
 old=folder.parent/'Resources/ThirdParty/rebuild-sources';old.mkdir(parents=True,exist_ok=True);(old/'stale.zip').write_text('old dependency source')
@@ -56,3 +61,11 @@ old=folder.parent/'Resources/ThirdParty/rebuild-sources';old.mkdir(parents=True,
             self.assertEqual((notices/'tdl-extension-LICENSE').read_text(),'license notice')
             self.assertEqual((notices/'go-runtime-LICENSE').read_text(),'license notice')
             self.assertEqual((notices/'thumbnail-helper-source/LICENSE').read_text(),'helper source')
+            (root/'apps/desktop/macos').rmdir()
+            result=subprocess.run(['bash',str(script)],env=env,text=True,capture_output=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            commands=(root/'apps/desktop/flutter-commands.log').read_text().splitlines()
+            self.assertIn('create --platforms=macos .',commands)
+            self.assertIn('build macos --release --build-name 0.1.0',commands)
+            self.assertFalse(any('windows' in command or 'linux' in command for command in commands))
+            self.assertEqual(set((root/'build/deployment-targets.log').read_text().splitlines()),{'13.0'})

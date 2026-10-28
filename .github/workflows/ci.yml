@@ -8,14 +8,13 @@ on:
 permissions:
   contents: read
 
+env:
+  GOFLAGS: '-p=1'
+
 jobs:
   go-backend:
-    name: Go backend tests (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    name: Go backend tests (macOS)
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
@@ -33,8 +32,7 @@ jobs:
       - name: Static analysis
         working-directory: backend
         run: go vet ./...
-      - name: Race detector (Linux and macOS)
-        if: runner.os != 'Windows'
+      - name: Race detector
         working-directory: backend
         run: go test -race ./...
       - name: Build backend
@@ -42,8 +40,8 @@ jobs:
         run: go build ./cmd/manager
 
   flutter-desktop:
-    name: Flutter tests and analysis
-    runs-on: ubuntu-latest
+    name: Flutter tests and analysis (macOS)
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
@@ -51,9 +49,6 @@ jobs:
           flutter-version: 3.47.6
           channel: stable
           cache: true
-      - name: Generate Linux host project
-        working-directory: apps/desktop
-        run: flutter create --platforms=linux .
       - name: Resolve packages
         working-directory: apps/desktop
         run: flutter pub get

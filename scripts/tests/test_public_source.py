@@ -26,3 +26,28 @@ class PublicSourceTests(unittest.TestCase):
    subprocess.run(['git','-C',str(root),'add','-f','.env'],check=True)
    (root/'.gitignore').write_text('.env\n')
    with self.assertRaises(ValueError):module.candidate_files(root)
+ def test_removed_tracked_docs_are_not_in_working_snapshot(self):
+  with tempfile.TemporaryDirectory()as temp:
+   root=Path(temp);subprocess.run(['git','init','-q',str(root)],check=True)
+   (root/'README.md').write_text('public instructions')
+   (root/'docs').mkdir();old=root/'docs/STATUS.md';old.write_text('old notes')
+   subprocess.run(['git','-C',str(root),'add','.'],check=True)
+   old.unlink()
+   self.assertEqual(module.candidate_files(root),['README.md'])
+ def test_tracked_internal_planning_is_rejected(self):
+  for name in ['docs/superpowers/plans/notes.md','docs/IMPLEMENTATION_PLAN.md',
+               'docs/PHASE-1-DOMAIN.md','docs/STATUS.md','docs/TEST_MATRIX.md',
+               'docs/DOCUMENTATION_RESEARCH.md','design-system/app/MASTER.md']:
+   with self.subTest(name=name),tempfile.TemporaryDirectory()as temp:
+    root=Path(temp);subprocess.run(['git','init','-q',str(root)],check=True)
+    file=root/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_text('local notes')
+    subprocess.run(['git','-C',str(root),'add',name],check=True)
+    with self.assertRaises(ValueError):module.candidate_files(root)
+ def test_deleted_working_copy_does_not_hide_staged_private_files(self):
+  for name in ['.env','account.session','local-state/jobs.json','build/generated.txt']:
+   with self.subTest(name=name),tempfile.TemporaryDirectory()as temp:
+    root=Path(temp);subprocess.run(['git','init','-q',str(root)],check=True)
+    file=root/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_text('private fixture')
+    subprocess.run(['git','-C',str(root),'add','-f',name],check=True)
+    file.unlink()
+    with self.assertRaises(ValueError):module.candidate_files(root)

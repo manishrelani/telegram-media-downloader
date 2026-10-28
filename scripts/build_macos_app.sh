@@ -7,6 +7,11 @@ BACKEND_OUT="$ROOT/build/telegram-media-downloader-backend"
 PREVIEW_OUT="$ROOT/build/tdl-tmm-previews-v3"
 RUNTIME_OUT="$ROOT/build/tdl-tmm"
 export GOTOOLCHAIN=go1.27.3
+# Match the Go toolchain's minimum and avoid inheriting the host SDK's newer
+# deployment target when cgo links the Telegram runtime.
+export MACOSX_DEPLOYMENT_TARGET=13.0
+export CGO_CFLAGS="${CGO_CFLAGS:-} -mmacosx-version-min=13.0"
+export CGO_LDFLAGS="${CGO_LDFLAGS:-} -mmacosx-version-min=13.0"
 
 if ! command -v go >/dev/null 2>&1; then
   echo "Go (with Go 1.27.3 toolchain support) is required. Install Go and try again." >&2
@@ -22,8 +27,8 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
 fi
 
 if [[ ! -d "$APP_DIR/macos" ]]; then
-  echo "Generating Flutter desktop host folders..."
-  (cd "$APP_DIR" && flutter create --platforms=macos,windows,linux .)
+  echo "Generating Flutter macOS host folder..."
+  (cd "$APP_DIR" && flutter create --platforms=macos .)
 fi
 
 mkdir -p "$ROOT/build"
@@ -57,8 +62,19 @@ PY
 
 echo "Resolving Flutter packages..."
 (cd "$APP_DIR" && flutter pub get)
+# Apple's native version stays numeric. Prerelease names remain in pubspec,
+# release tags and asset names; the build number distinguishes app revisions.
+NATIVE_BUILD_NAME="$(python3 - "$APP_DIR/pubspec.yaml" <<'PY'
+from pathlib import Path
+import re, sys
+match = re.search(r'^version:\s*([0-9]+\.[0-9]+\.[0-9]+)(?:-[A-Za-z0-9.-]+)?\+[0-9]+\s*$', Path(sys.argv[1]).read_text(), re.MULTILINE)
+if not match:
+    raise SystemExit('Expected a version such as 0.1.0+1 in pubspec.yaml')
+print(match[1])
+PY
+)"
 echo "Building Flutter macOS release..."
-(cd "$APP_DIR" && flutter build macos --release)
+(cd "$APP_DIR" && flutter build macos --release --build-name "$NATIVE_BUILD_NAME")
 
 PRODUCTS_DIR="$APP_DIR/build/macos/Build/Products/Release"
 APP_BUNDLE="$PRODUCTS_DIR/Telegram Media Downloader.app"

@@ -6,13 +6,13 @@ Start with the symptom below. Use this repository's issue form if it remains rep
 
 ## macOS will not open the app
 
-Confirm that the archive came from the repository's release and matches its published checksum. Read the release's signing status. Current local builds are ad-hoc signed, without notarization.
+Confirm that the DMG came from the repository's release and matches its published checksum. Read the release's signing status. Current local builds are ad-hoc signed, without notarization.
 
 For an app you trust, follow Apple's [per-app first-launch instructions](https://support.apple.com/en-us/102445). Managed Macs may have additional restrictions. A damaged/modified or malware warning needs investigation. Do not disable Gatekeeper globally, run the app as root or grant Full Disk Access to get past a launch failure.
 
 ## Backend or Telegram runtime is missing
 
-Use the complete app ZIP and preserve its bundle contents. Re-extract or rebuild the app rather than copying individual executables from unrelated versions.
+Install the complete app from its release DMG and preserve its bundle contents. Copy it from the disk image into Applications again, or rebuild from source. Avoid mixing executables from different versions.
 
 For source development:
 
@@ -73,7 +73,7 @@ Report whether the original file exists, whether the caption or actual attachmen
 
 ## Pause/Resume is unavailable or fails
 
-Graceful pause is currently disabled on Windows. Where available, wait for **Paused** before quitting. Resume and retry use the original destination; reconnect it first. Real-file interruption, restart recovery and checksum matching still need broader platform validation.
+Wait for **Paused** before quitting. Resume and retry use the original destination; reconnect it first. Real-file interruption, restart recovery and checksum matching still need broader validation.
 
 Preserve unfinished work and provide the observed state/error. Automated fake-process coverage does not establish reliability for every Telegram attachment or native filesystem.
 

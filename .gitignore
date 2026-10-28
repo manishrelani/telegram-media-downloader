@@ -14,6 +14,14 @@ apps/desktop/linux/flutter/ephemeral/
 # Local agent tooling and implementation scratch
 .agents/
 .superpowers/
+# Local design and planning notes
+/docs/superpowers/
+/design-system/
+/docs/IMPLEMENTATION_PLAN.md
+/docs/PHASE-*.md
+/docs/STATUS.md
+/docs/TEST_MATRIX.md
+/docs/DOCUMENTATION_RESEARCH.md
 # Python caches and local runtime data
 __pycache__/
 *.py[cod]

@@ -1,4 +1,9 @@
 export GOTOOLCHAIN := go1.27.3
+export MACOSX_DEPLOYMENT_TARGET := 13.0
+ifeq ($(shell uname -s),Darwin)
+export CGO_CFLAGS := $(CGO_CFLAGS) -mmacosx-version-min=13.0
+export CGO_LDFLAGS := $(CGO_LDFLAGS) -mmacosx-version-min=13.0
+endif
 
 .PHONY: test test-thumbnail-helper test-thumbnail-helper-race build-thumbnail-helper test-go test-go-race test-python vet build smoke test-flutter format
 

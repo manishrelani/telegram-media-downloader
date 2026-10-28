@@ -1,7 +1,7 @@
 name: telegram_media_downloader
 description: Local-first Telegram media downloader desktop UI backed by tdl.
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.1.0-alpha.1+2
 
 environment:
   sdk: '>=3.9.0 <4.0.0'

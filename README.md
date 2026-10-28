@@ -4,84 +4,117 @@
 
 # Telegram Media Downloader
 
-Repository: [manishrelani/telegram-media-downloader](https://github.com/manishrelani/telegram-media-downloader).
+Browse Telegram chats and topics, choose the files you want, and download them to your Mac with progress for each file.
 
-Browse your Telegram media. Download the files you choose. Keep them organized on your Mac.
+[Download for macOS](https://github.com/manishrelani/telegram-media-downloader/releases/download/v0.1.0-alpha.1/Telegram-Media-Downloader-v0.1.0-alpha.1-macos-arm64.dmg) · [Installation](#installation) · [Telegram login](#telegram-login) · [Help](#help)
 
-Telegram Media Downloader is a local desktop app for browsing chats and forum topics, choosing videos and documents, and following each file from the download queue to its saved folder. It uses Flutter, a Go backend and a bundled, patched [tdl](https://github.com/iyear/tdl) runtime.
+**Current preview:** [v0.1.0-alpha.1](https://github.com/manishrelani/telegram-media-downloader/releases/tag/v0.1.0-alpha.1). Read the release notes for known limitations before using this early version.
 
-[Get started](docs/GETTING_STARTED.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Build from source](docs/DEVELOPMENT.md) · [Contribute](CONTRIBUTING.md)
+![Telegram Media Downloader showing topics, media selection and download progress](docs/assets/library-preview.png)
 
-![Telegram Media Downloader showing topic navigation, file selection and individual download progress](docs/assets/library-preview.png)
+*Preview using sample data.*
 
-*Interface preview with sample data.*
+## Features
 
-## Download
+- Browse channels, groups and forum topics.
+- Select individual files or download a whole chat/topic with your chosen file types.
+- Download videos, images, audio, PDFs, Office files and other documents.
+- View video thumbnails and track each file in Downloads.
+- Search, filter and sort media and download history.
+- Retry unfinished work and skip previously saved files that are still present.
+- Use light/dark appearance and resize the chat sidebar to fit longer names.
 
-Open [GitHub Releases](https://github.com/manishrelani/telegram-media-downloader/releases) and choose a macOS app ZIP from a published release. The release notes identify the supported architecture, signing status and known limitations. Extract the ZIP and move the app to Applications.
+## Requirements
 
-**Current target: macOS on Apple Silicon.** Windows and Linux source support is experimental; native distribution and end-to-end validation are pending.
+- A Mac with **Apple Silicon** (M1 or later).
+- **macOS 13 or later**.
+- A Telegram account with access to the chats and media you want to download.
+- Free space on your Mac and your chosen download drive.
 
-GitHub's automatically generated **Source code** archives contain source files. Choose the separately attached **macOS app ZIP** to run the app. If no app release is listed yet, [build it from source](docs/DEVELOPMENT.md).
+The macOS installer includes the backend and [tdl](https://github.com/iyear/tdl) runtime for Telegram login and transfers. No source build or separate tdl installation is required. Complete the [Telegram login](#telegram-login) steps before downloading media.
 
-The project distributes directly through GitHub. No app-store installation or project-owned server is needed. Download verification, first launch, Telegram login and updates are covered in [Getting started](docs/GETTING_STARTED.md).
+## Installation
 
-## What you can do
+1. Open [Releases](https://github.com/manishrelani/telegram-media-downloader/releases) and download `Telegram-Media-Downloader-v0.1.0-alpha.1-macos-arm64.dmg` from the preview release's **Assets**.
+2. Open the `.dmg` and drag **Telegram Media Downloader** into **Applications**.
+3. Eject the disk image and open the app from Applications.
+4. For first-time setup, quit the app and follow [Telegram login](#telegram-login) below.
 
-- Browse chats and forum topics; load recent media first and older files when needed.
-- Choose individual files or explicitly download a whole chat/topic with selected file types.
-- Combine videos, images, audio, PDFs, Office files and other document categories.
-- Track each file's progress and status; pause, resume, cancel or retry where supported.
-- Filter and sort the media browser and download history by relevant file and download details.
-- Preview videos with thumbnails that appear as they become available.
-- Save caption-based filenames, avoid overwriting collisions and skip recorded files that are still present.
-- Use light/dark appearance, keyboard navigation and a resizable chat sidebar.
+Choose the `.dmg` app installer. GitHub's **Source code** archives are for developers.
 
-Start with the [five-step download walkthrough](docs/GETTING_STARTED.md#download-your-first-files).
+The initial installer is not notarized by Apple. If macOS blocks an app you trust, follow [Apple's instructions to open it through Privacy & Security](https://support.apple.com/en-us/102445).
 
-## How it works
+<details>
+<summary>Optional: verify the download</summary>
 
-```text
-Flutter desktop app → local Go backend → bundled tdl runtime → Telegram
-                            ↓
-                   selected save folder
+Download `SHA256SUMS.txt` from the same release. In Terminal, from the folder containing the `.dmg` and checksum file, run:
+
+```bash
+shasum -a 256 -c SHA256SUMS.txt
 ```
 
-The Go backend manages the queue, filenames, saved-file checks and progress events. `tdl` handles Telegram authentication and media transfers using your account. A separate app-owned helper fetches still-image thumbnails.
+A matching download reports `OK`.
 
-The macOS bundle includes its required Go executables. Users of the app ZIP do not need Go, Flutter or a separate global `tdl` installation. First-time Telegram login currently uses a Terminal command supplied in the user guide.
+</details>
 
-See [Dependencies and tdl integration](docs/DEPENDENCIES.md) for the pinned runtime, upstream documentation, licenses and how dependency updates are handled.
+## Telegram login
 
-## Status and limits
+**Log in once using Terminal.** There is no in-app login screen yet. Later launches reuse the saved session unless it expires or is revoked.
 
-This is an early project. Automated tests, synthetic integration checks and local macOS builds have been run; real-account transfers, checksum-verified interruption/recovery and native external-drive interactions still need broader acceptance testing.
+1. Quit Telegram Media Downloader and any other running tdl commands.
+2. Open **Terminal** and run:
 
-- Your Telegram account must have access to the media; Telegram restrictions and rate limits still apply.
-- Search operates on loaded results. Use **Load older** to expand the browser.
-- Progress depends on telemetry from the runtime; missing percentage information is shown without inventing progress.
-- Preview quality depends on the thumbnail Telegram provides.
-- Downloads use private working storage before final copying, so allow space on the app-state volume and the selected destination.
-- Windows graceful pause is currently unavailable. Other Windows/Linux behavior needs native verification.
+   ```bash
+   "/Applications/Telegram Media Downloader.app/Contents/MacOS/tdl-tmm" login -T qr
+   ```
 
-[Release checklist](docs/RELEASING.md) · [Detailed media behavior](docs/MEDIA_LIBRARY.md)
+3. On your phone, open Telegram → **Settings → Devices → Link Desktop Device** and scan the QR code shown in Terminal. Complete any further account prompts.
+4. Wait for login to finish, then open Telegram Media Downloader and select **Refresh** to load your chats.
 
-## Help and contributions
+If QR login does not work, use phone-number/code login and follow the prompts:
 
-Read [Troubleshooting](docs/TROUBLESHOOTING.md), then use [this repository's issue forms](https://github.com/manishrelani/telegram-media-downloader/issues/new/choose) for reproducible bugs or feature proposals. Include app/runtime versions and sanitized errors. Report suspected vulnerabilities privately using [SECURITY.md](SECURITY.md).
+```bash
+"/Applications/Telegram Media Downloader.app/Contents/MacOS/tdl-tmm" login -T code
+```
 
-Documentation fixes, tests, accessibility improvements and platform validation are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains setup, TDD, pull requests and commit conventions.
+These commands assume the app is in `/Applications`. Adjust the path if you installed it elsewhere.
 
-## Privacy and responsible use
+For other login methods, including an existing Telegram Desktop session, follow the official [tdl quick start](https://docs.iyear.me/tdl/getting-started/quick-start/). Where it uses `tdl`, substitute the full bundled executable path shown above and keep the default session. For login or connection errors, see [tdl troubleshooting](https://docs.iyear.me/tdl/more/troubleshooting/).
 
-The app has no project-owned cloud service. Telegram operations still use the network and your local Telegram session. Keep sessions, login codes, exports and private message content out of issues and commits. Download content you are authorized to access and save.
+## Download your first files
 
-This project is independent of Telegram and the upstream tdl project.
+1. Select a chat in the sidebar, then a forum topic if applicable.
+2. Browse recent media. Use **Load older** for earlier files; search and browser filters apply to loaded results.
+3. Choose file types and select the files you want. Use the whole-chat/topic download action when you want every matching file in that chat or topic.
+4. Choose a save folder and start the download.
+5. Follow each file in Downloads and open its saved location when complete.
+
+Thumbnails load still images, not full videos. Some media has no usable thumbnail. Telegram access restrictions, rate limits and network conditions still apply.
+
+## Updates and local data
+
+Updates are manual: finish or pause active downloads, quit the app, then install the newer version from Releases. Your downloaded files and local app data remain in their existing locations.
+
+Your Telegram session, download history and files are stored locally. The app connects to Telegram using your account; there is no project-owned cloud service. Keep login codes, QR codes and session files private.
+
+## Disconnect or uninstall
+
+To disconnect, quit the app and end the corresponding session in Telegram's **Settings → Devices**. See [Telegram's session guidance](https://telegram.org/faq#q-my-phone-was-stolen-what-do-i-do). Other tdl tools on this Mac may share that session.
+
+To uninstall, quit the app and move it from Applications to the Trash. Removing the app leaves your downloads, local history/cache and tdl session data in place; it does not revoke the Telegram session. See [app data locations](docs/DEPENDENCIES.md#local-data) and the [tdl data guide](https://docs.iyear.me/tdl/more/data/) before removing local data.
+
+## Help
+
+Read [Troubleshooting](docs/TROUBLESHOOTING.md) or [open an issue](https://github.com/manishrelani/telegram-media-downloader/issues/new/choose). Include your app version, macOS version and reproduction steps, with private information removed.
+
+Report app and bundled-tdl problems here first so they can be investigated together. Suspected vulnerabilities should be [reported privately](SECURITY.md).
+
+## Contributing
+
+Bug reports, documentation fixes and code contributions are welcome. See [Contributing](CONTRIBUTING.md) for the workflow and [Development](docs/DEVELOPMENT.md) to build and test the app.
 
 ## License and acknowledgements
 
-The project's original code is licensed under the **GNU Affero General Public License, version 3 (AGPL-3.0-only)**. See [LICENSE](LICENSE) for the full terms. Third-party components retain their respective licenses and notices.
+Licensed under [GNU AGPLv3 (AGPL-3.0-only)](LICENSE). Third-party components retain their own licenses; see [Dependencies and notices](docs/DEPENDENCIES.md).
 
-The bundled tdl runtime and preview helper use AGPLv3 components. Upstream notices and dependency sources are retained. See [Dependencies and licensing](docs/DEPENDENCIES.md#licensing-and-corresponding-source).
-
-Thanks to [tdl](https://github.com/iyear/tdl), [gotd](https://github.com/gotd/td), [Flutter](https://flutter.dev/) and the other dependencies that make this app possible.
+Built with [tdl](https://github.com/iyear/tdl), [gotd](https://github.com/gotd/td) and [Flutter](https://flutter.dev/). This project is independent of Telegram and tdl. Download only content you are authorized to access and save.

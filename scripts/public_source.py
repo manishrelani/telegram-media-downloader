@@ -10,12 +10,14 @@ import zipfile
 TOP_LEVEL = {'.github', '.gitignore', '.gitattributes', '.gitleaks.toml', 'README.md',
              'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md', 'LICENSE', 'NOTICE',
              'Makefile', 'backend', 'thumbnail-helper', 'runtime', 'apps', 'scripts',
-             'docs', 'testdata', 'design-system'}
+             'docs', 'testdata'}
 PRIVATE_PARTS = {'.agents', '.superpowers', '__pycache__', '.git', '.dart_tool',
                  'build', 'Pods', 'ephemeral', '.tdl', '.tdl-work', 'downloads', 'local-state'}
 PRIVATE_SUFFIXES = {'.pyc', '.pyo', '.session', '.key', '.pem', '.p12', '.pfx', '.db', '.sqlite'}
 BINARY_MAGIC = {b'\x7fELF', b'\xcf\xfa\xed\xfe', b'\xce\xfa\xed\xfe',
                 b'\xfe\xed\xfa\xcf', b'\xca\xfe\xba\xbe'}
+PLANNING_DOCS = {'IMPLEMENTATION_PLAN.md', 'STATUS.md', 'TEST_MATRIX.md',
+                 'DOCUMENTATION_RESEARCH.md'}
 
 def candidate_files(root):
     root = Path(root).resolve()
@@ -24,7 +26,12 @@ def candidate_files(root):
     if real.returncode == 0 and Path(real.stdout.strip()).resolve() == root:
         command = ['git', '-C', str(root), 'ls-files', '--cached', '--others', '--exclude-standard', '-z']
         result = subprocess.run(command, capture_output=True, check=True)
+        # The working snapshot can include reviewed deletions that are not staged yet.
+        removed = subprocess.run(['git', '-C', str(root), 'ls-files', '--deleted', '-z'],
+                                 capture_output=True, check=True)
+        deleted = set(removed.stdout.decode().split('\0'))
     else:
+        deleted = set()
         with tempfile.TemporaryDirectory(prefix='tmm-public-index-') as temp:
             repository = Path(temp) / 'index.git'
             subprocess.run(['git', 'init', '--bare', '-q', str(repository)], check=True)
@@ -34,12 +41,21 @@ def candidate_files(root):
     files = sorted(set(name for name in result.stdout.decode().split('\0') if name))
     for name in files:
         relative = PurePosixPath(name)
-        if (relative.is_absolute() or '..' in relative.parts or relative.parts[0] not in TOP_LEVEL
+        # A private/generated file can remain in the Git index after its working
+        # copy is removed. Reject it before omitting ordinary source deletions.
+        if (relative.is_absolute() or '..' in relative.parts
+                or (relative.parts[0] not in TOP_LEVEL and
+                    not (name in deleted and relative.parts[0] == 'design-system'))
                 or PRIVATE_PARTS.intersection(relative.parts)
                 or relative.suffix.lower() in PRIVATE_SUFFIXES
                 or (relative.name.startswith('.env') and relative.name != '.env.example')
                 or relative.name == 'jobs.json'):
             raise ValueError(f'Remove private/generated file from the publication index: {name}')
+        if name in deleted:
+            continue
+        if ('superpowers' in relative.parts or (relative.parts[0] == 'docs' and
+                (relative.name in PLANNING_DOCS or relative.name.startswith('PHASE-')))):
+            raise ValueError(f'Remove internal planning notes from the publication index: {name}')
         path = root / relative
         # Check every component, not only the final file.
         current = root
@@ -53,7 +69,7 @@ def candidate_files(root):
             magic = stream.read(4)
         if magic in BINARY_MAGIC or magic[:2] == b'MZ':
             raise ValueError(f'Compiled executable cannot be published as source: {name}')
-    return files
+    return [name for name in files if name not in deleted]
 
 def build_archive(root, destination):
     root = Path(root).resolve()

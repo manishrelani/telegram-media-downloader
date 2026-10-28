@@ -43,11 +43,7 @@ The helper requests explicit thumbnail locations through the existing tdl sessio
 
 The app stores job history, preferences, preview caches and private work data below its state directory. Defaults are:
 
-| Platform | App state root |
-| --- | --- |
-| macOS | `~/Library/Application Support/telegram-media-manager/` |
-| Linux | `${XDG_CONFIG_HOME:-~/.config}/telegram-media-manager/` |
-| Windows | `%AppData%\telegram-media-manager\` |
+On macOS: `~/Library/Application Support/telegram-media-manager/`.
 
 The legacy `telegram-media-manager` directory names and hidden `.telegram-media-manager-manifest.json` filename are intentionally retained so the product rename preserves existing jobs, preferences, caches and duplicate detection. The existing bundle identifier and window-restoration keys are also retained for compatibility. Runtime/helper executable names and `TMM_` environment variables also keep their existing technical identifiers. The repository name is `telegram-media-downloader`.
 
